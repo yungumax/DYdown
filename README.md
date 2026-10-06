@@ -1,6 +1,6 @@
 # DYdown · 抖音视频无水印下载（桌面版）
 
-**Windows EXE 桌面工具**，界面一比一还原 WeBodown（标题栏 / 侧边栏 / 引导页 / 全套动效），主题为抖音黑（纯黑底 + 抖音红 `#FE2C55` / 抖音青 `#25F4EE`），内置应用内自动更新。
+**Windows EXE 桌面工具**，主题为抖音黑（纯黑底 + 抖音红 `#FE2C55` / 抖音青 `#25F4EE`），内置应用内自动更新。
 
 > 主仓库：<https://github.com/yungumax/DYdown>
 
@@ -52,8 +52,8 @@ DYdown/
 ├── scripts/gen-icon.js   # 应用图标生成
 ├── build/icon.ico        # 应用图标
 ├── .github/workflows/release.yml  # 打 tag 自动构建发布
-├── public/fonts/         # 钉钉进步体（WeBodown 同款，备用字体）
-└── src/                  # Vue 3 前端（复刻自 WeBodown）
+├── public/fonts/         # 钉钉进步体（备用字体）
+└── src/                  # Vue 3 前端
     ├── components/       # TitleBar / Sidebar / Onboarding / TaskRow / StepHeader / Icon
     ├── pages/            # ParsePage / TransferPage / SettingsPage / AboutPage
     ├── api.js            # 后端接口层（HTTP + dybridge）
