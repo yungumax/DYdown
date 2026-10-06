@@ -39,8 +39,18 @@ win:
 
 # oneClick 静默安装：electron-updater 才能应用内升级
 nsis:
-  oneClick: true
+  # 标准安装向导（非一键静默）：欢迎页 → 选择安装位置 → 安装进度 → 完成页；
+  # 自动更新（electron-updater）对引导式安装器同样支持，升级时静默执行
+  oneClick: false
   perMachine: false
-  allowToChangeInstallationDirectory: false
+  allowElevation: true
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: DYdown
+  uninstallDisplayName: DYdown
+  # 完成页可勾选"运行 DYdown"
+  runAfterFinish: true
+  # 卸载时保留用户数据（登录状态/下载清单留在 %APPDATA%/dydown）
   deleteAppDataOnUninstall: false
   artifactName: DYdown-Setup-${version}.${ext}

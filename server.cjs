@@ -15,7 +15,7 @@ const crypto = require("crypto");
 const { Readable } = require("stream");
 const { exec } = require("child_process");
 
-const VERSION = "1.0.0";
+const VERSION = "1.0.1";
 const PUBLIC_DIR = path.join(__dirname, "dist-web");
 const DATA_DIR = process.env.DYDOWN_DATA_DIR || path.join(process.cwd(), "data");
 const SETTINGS_FILE = path.join(DATA_DIR, "settings.json");
