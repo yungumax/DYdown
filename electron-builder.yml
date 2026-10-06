@@ -27,6 +27,8 @@ publish:
   provider: github
   owner: yungumax
   repo: DYdown
+  # 直接发布正式 Release（默认是草稿，electron-updater 看不到草案）
+  releaseType: release
 
 win:
   icon: build/icon.ico
