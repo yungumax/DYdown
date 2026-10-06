@@ -388,6 +388,7 @@ function clearFinished() {
           @save="saveSettings"
           @reload="loadSettings"
           @reset="resetSettings"
+          @onboard="showOnboarding = true"
         />
         <AboutPage v-if="page === 'about'" class="page-in" :version="version" />
       </main>
@@ -400,6 +401,7 @@ function clearFinished() {
     <Onboarding
       v-if="showOnboarding && settings"
       :settings="settings"
+      :version="version"
       @done="finishOnboarding"
     />
 

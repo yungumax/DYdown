@@ -7,6 +7,7 @@ import * as api from "../api";
 
 const props = defineProps({
   settings: { type: Object, required: true },
+  version: { type: String, default: "" },
 });
 const emit = defineEmits(["done", "skip"]);
 
@@ -58,9 +59,14 @@ function skip() {
         <Icon name="download" class="mark" />
         <div>
           <h1>欢迎使用 DYdown</h1>
-          <p class="sub num">v{{ props.settings.version || "" }}</p>
+          <p class="sub num">v{{ props.version || props.settings.version || "" }}</p>
         </div>
       </div>
+
+      <!-- 功能一行速览（精简版，详细说明不放引导页） -->
+      <p class="highlights-line faint">
+        无水印下载（最高 4K） · 主页与合集批量解析 · 自动更新
+      </p>
 
       <div class="fields">
         <div class="field full">
@@ -108,6 +114,8 @@ function skip() {
         </button>
         <button class="ghost" @click="skip">跳过，稍后在设置中配置</button>
       </div>
+
+      <p class="legal faint">本工具仅供个人学习与备份使用，请尊重创作者版权，勿用于商业传播。</p>
     </div>
   </div>
 </template>
@@ -154,6 +162,19 @@ h1 {
   margin: 2px 0 0;
   font-size: 12px;
   color: var(--faint);
+}
+
+/* 功能一行速览（精简版） */
+.highlights-line {
+  margin: 0 0 16px;
+  font-size: 12.5px;
+  line-height: 1.7;
+}
+
+.legal {
+  margin: 14px 0 0;
+  font-size: 11.5px;
+  text-align: center;
 }
 
 .fields {

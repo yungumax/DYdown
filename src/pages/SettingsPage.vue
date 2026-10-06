@@ -10,7 +10,7 @@ const props = defineProps({
   settings: { type: Object, default: null },
   env: { type: Object, default: null },
 });
-const emit = defineEmits(["toast", "save", "reset", "reload", "login", "logout"]);
+const emit = defineEmits(["toast", "save", "reset", "reload", "login", "logout", "onboard"]);
 
 // 分类图标：值是 iconfont 图标名（见 src/icons.js）
 const CATEGORY_ICONS = {
@@ -510,6 +510,10 @@ async function cleanup(kind) {
       <header class="head">
         <h1>设置</h1>
         <span class="spacer"></span>
+        <button class="ghost" title="重新查看首次使用引导页" @click="emit('onboard')">
+          <Icon name="info" />
+          新手指引
+        </button>
         <button class="ghost" :disabled="!settings" @click="reset">
           <Icon name="reload" />
           恢复默认
