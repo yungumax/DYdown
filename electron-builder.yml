@@ -1,0 +1,44 @@
+# electron-builder 打包配置
+appId: com.yungumax.dydown
+productName: DYdown
+copyright: Copyright © 2026 yungumax
+
+directories:
+  output: dist
+  buildResources: build
+
+# 直接使用本机 node_modules 里已下载好的 Electron，避免重复下载
+electronDist: node_modules/electron/dist
+
+files:
+  - main.cjs
+  - extract-ids.js
+  - hook-api.js
+  - mix-cards.js
+  - preload.cjs
+  - server.cjs
+  - dist-web/**/*
+  - package.json
+  - "!scripts/**"
+  - "!**/*.map"
+
+# 自动更新：从 GitHub Releases 拉取 latest.yml
+publish:
+  provider: github
+  owner: yungumax
+  repo: DYdown
+
+win:
+  icon: build/icon.ico
+  target:
+    - target: nsis
+      arch:
+        - x64
+
+# oneClick 静默安装：electron-updater 才能应用内升级
+nsis:
+  oneClick: true
+  perMachine: false
+  allowToChangeInstallationDirectory: false
+  deleteAppDataOnUninstall: false
+  artifactName: DYdown-Setup-${version}.${ext}

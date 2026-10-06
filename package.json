@@ -1,0 +1,33 @@
+{
+  "name": "dydown",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "抖音视频无水印下载桌面端（界面一比一还原 WeBodown，抖音黑主题）",
+  "main": "main.cjs",
+  "author": "yungumax",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yungumax/DYdown.git"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build:web": "vite build",
+    "icons": "node scripts/gen-icon.cjs",
+    "start": "npm run build:web && electron .",
+    "dist": "npm run build:web && npm run icons && electron-builder --win"
+  },
+  "dependencies": {
+    "animejs": "^4.5.0",
+    "electron-updater": "^6.3.9",
+    "vue": "^3.5.13"
+  },
+  "devDependencies": {
+    "@resvg/resvg-js": "^2.6.0",
+    "@vitejs/plugin-vue": "^5.2.1",
+    "electron": "^33.0.0",
+    "electron-builder": "^25.1.8",
+    "vite": "^5.4.11"
+  }
+}
