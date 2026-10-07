@@ -51,6 +51,8 @@ nsis:
   uninstallDisplayName: DYdown
   # 完成页可勾选"运行 DYdown"
   runAfterFinish: true
-  # 卸载时保留用户数据（登录状态/下载清单留在 %APPDATA%/dydown）
+  # 卸载时询问是否删除用户数据（登录状态/下载清单）——由自定义脚本接管询问，
+  # 所以这里保持 false（true 会由框架无条件删除、不给用户选择）
   deleteAppDataOnUninstall: false
+  include: build/installer.nsh
   artifactName: DYdown-Setup-${version}.${ext}

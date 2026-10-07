@@ -8,6 +8,11 @@ const { app, BrowserWindow, Menu, ipcMain, dialog, shell, clipboard, session, pr
 const path = require("path");
 const fs = require("fs");
 
+/* 调试开关：DYDOWN_DEBUG_PORT=9222 时开启 Chromium 远程调试端口（仅本机排查用） */
+if (process.env.DYDOWN_DEBUG_PORT) {
+  app.commandLine.appendSwitch("remote-debugging-port", process.env.DYDOWN_DEBUG_PORT);
+}
+
 /* 数据目录先于 server.cjs 加载时确定（设置/日志/诊断都在这里） */
 process.env.DYDOWN_DATA_DIR = app.getPath("userData");
 
@@ -834,6 +839,7 @@ if (!gotLock) {
     setTimeout(() => {
       refreshLoginProfile().catch(() => {});
     }, 5000);
+
   });
 
   app.on("window-all-closed", () => app.quit());

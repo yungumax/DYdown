@@ -253,6 +253,42 @@ watch(
   }
 );
 const batchInput = ref(""); // 当前查看的来源
+/* 解析页操作说明：默认展开，可收起 */
+const guideOpen = ref(true);
+/* 解析结果卡片：默认展开，可收起 */
+const resultsOpen = ref(true);
+
+/* 折叠高度：grid-template-rows 方案在部分环境不收缩，
+   改用真实内容高度驱动 max-height（原生过渡、100% 可靠） */
+const guideBodyRef = ref(null);
+const resultsBodyRef = ref(null);
+const guideMax = ref("none");
+const resultsMax = ref("none");
+
+async function syncFoldHeights() {
+  await nextTick();
+  if (guideBodyRef.value) {
+    guideMax.value = guideOpen.value ? `${guideBodyRef.value.scrollHeight}px` : "0px";
+  }
+  if (resultsBodyRef.value) {
+    resultsMax.value = resultsOpen.value ? `${resultsBodyRef.value.scrollHeight}px` : "0px";
+  }
+}
+
+watch([guideOpen, resultsOpen], syncFoldHeights);
+onMounted(() => {
+  syncFoldHeights();
+});
+/* 解析结果内容增减（条目、去重明细、失败项）时重测高度，避免展开态被裁 */
+watch(
+  () => [
+    okItems.value.length,
+    parseSkipped.value.length,
+    failedItems.value.length,
+    resultsOpen.value,
+  ],
+  () => syncFoldHeights()
+);
 
 /** 已解析出的来源：单条与批量都能在选择页里看 */
 const allSources = computed(() => okItems.value);
@@ -1253,16 +1289,88 @@ function kindLabel(kind) {
       </div>
     </section>
 
+    <!-- 操作说明：新手在解析页就能看到怎么用；收起时是一条全宽标题条 -->
+    <section class="card guide-card">
+      <button class="guide-head" @click="guideOpen = !guideOpen">
+        <Icon name="fileText" />
+        <span class="guide-title">操作说明</span>
+        <span class="guide-sub">快速上手 · 支持的链接 · 解析与选择</span>
+        <Icon name="chevronDown" class="guide-caret" :class="{ open: guideOpen }" />
+      </button>
+      <div class="fold-inner" ref="guideBodyRef" :style="{ maxHeight: guideMax }">
+        <div class="guide-body">
+            <h3 class="guide-sec">快速上手</h3>
+            <ol class="guide-steps">
+              <li>
+                <b>登录（可选）</b>：点标题栏右上角「免登录」扫码登录。不登录也能下载公开内容；
+                登录后主页与合集解析更稳定、清晰度档位更完整（登录默认 4K 优先，未登录 1080P 优先）。
+              </li>
+              <li>
+                <b>解析</b>：把抖音链接粘进上面的输入框（每行一个，可混合多行），
+                点「开始解析」或按 Ctrl + Enter 键。
+              </li>
+              <li>
+                <b>下载</b>：解析完成后在「选择内容」表里勾选想要的条目，点「下载所选」；
+                想全要就直接点「下载全部」。
+              </li>
+            </ol>
+
+            <h3 class="guide-sec">支持的链接</h3>
+            <dl class="guide-table">
+              <div>
+                <dt>单条视频 / 图集</dt>
+                <dd>v.douyin.com/xxx · douyin.com/video/123… · 分享口令</dd>
+              </div>
+              <div>
+                <dt>用户主页</dt>
+                <dd>douyin.com/user/MS4wLjAB…（「加载全部」批量解析）</dd>
+              </div>
+              <div>
+                <dt>合集 / 系列</dt>
+                <dd>主页「合集」页链接 · 合集内视频链接</dd>
+              </div>
+              <div>
+                <dt>网页版弹窗链接</dt>
+                <dd>douyin.com/jingxuan?modal_id=123…（自动识别）</dd>
+              </div>
+            </dl>
+
+            <h3 class="guide-sec">解析与选择</h3>
+            <ul class="guide-notes">
+              <li>多行来源自动去重；重复内容会合并，不会重复下载。</li>
+              <li>
+                主页与合集点「加载全部 / 加载视频」后自动加载作品，完成后点窗口底部「完成加载」回传。
+              </li>
+              <li>合集视频表展开在合集卡片下方，可折叠，支持整段「下载合集」。</li>
+              <li>「传输」页可暂停 / 继续任务，支持断点续传；设置页可检查更新。</li>
+            </ul>
+          </div>
+        </div>
+    </section>
+
     <!-- 解析结果入口：成功的一律进「选择内容」页，这里只留入口与失败项 -->
-    <section v-if="items.length" class="card results page-in">
+    <section
+      v-if="items.length"
+      class="card results page-in"
+      :class="{ collapsed: !resultsOpen }"
+    >
       <header class="results-head">
         <h2>解析结果</h2>
         <span class="count num">{{ okItems.length }}</span>
+        <span class="results-sub">点击条目进入「选择内容」页</span>
         <span class="spacer"></span>
-        <button class="ghost" @click="resetParsed">清空</button>
+        <button v-if="resultsOpen" class="ghost" @click="resetParsed">清空</button>
+        <button
+          class="fold-btn"
+          :title="resultsOpen ? '收起解析结果' : '展开解析结果'"
+          @click="resultsOpen = !resultsOpen"
+        >
+          <Icon name="chevronDown" class="fold-caret" :class="{ open: resultsOpen }" />
+        </button>
       </header>
 
-      <div v-if="okItems.length" class="parsed-bar">
+      <div class="fold-inner" ref="resultsBodyRef" :style="{ maxHeight: resultsMax }">
+          <div v-if="okItems.length" class="parsed-bar">
         <button
           v-for="item in okItems"
           :key="item.input"
@@ -1312,6 +1420,7 @@ function kindLabel(kind) {
       <p v-if="!login.logged_in && okItems.length" class="login-tip">
         不登录也能下载公开作品，视频为无水印原档；登录后解析更稳定。
       </p>
+      </div>
     </section>
     </template>
   </div>
@@ -1444,6 +1553,173 @@ input:focus {
   color: var(--muted);
 }
 
+/* 解析页操作说明：折叠时是一条全宽标题条（图标 + 标题 + 描述 + 右侧箭头），
+   展开显示说明内容；高度变化有平滑过渡 */
+.guide-card {
+  padding: 0;
+  overflow: hidden;
+}
+
+.guide-title {
+  font-weight: 600;
+  flex: none;
+}
+
+.guide-sub {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+.guide-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 16px;
+  background: none;
+  border: none;
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  text-align: left;
+}
+
+.guide-head svg:first-child {
+  width: 15px;
+  height: 15px;
+  color: var(--accent);
+}
+
+.guide-caret {
+  margin-left: auto;
+  width: 14px;
+  height: 14px;
+  opacity: 0.5;
+  transition: transform 0.18s ease;
+}
+
+.guide-caret.open {
+  transform: rotate(180deg);
+}
+
+/* 展开内容：与卡片同底，分节呈现（小节标题 + 细分隔线 + 步骤/表格/要点） */
+.guide-body {
+  padding: 2px 20px 14px;
+}
+
+.guide-sec {
+  margin: 0 0 8px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+/* 非首个分节：上方细分隔线（分节之间的层次） */
+.guide-sec:not(:first-child) {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line-soft);
+}
+
+/* 快速上手：编号步骤，引导词加粗 */
+.guide-steps {
+  margin: 0;
+  padding-left: 21px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 12.5px;
+  line-height: 1.65;
+  color: var(--muted);
+}
+
+.guide-steps b {
+  color: var(--text);
+  font-weight: 600;
+}
+
+/* 支持的链接：名称 + 格式示例（等宽字体）两列 */
+.guide-table {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  font-size: 12.5px;
+}
+
+.guide-table > div {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+}
+
+.guide-table dt {
+  flex: none;
+  width: 112px;
+  color: var(--text);
+}
+
+.guide-table dd {
+  margin: 0;
+  min-width: 0;
+  color: var(--muted);
+  font-family: ui-monospace, Consolas, "Courier New", monospace;
+  overflow-wrap: anywhere;
+}
+
+/* 解析与选择：要点列表 */
+.guide-notes {
+  margin: 0;
+  padding-left: 19px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 12.5px;
+  line-height: 1.65;
+  color: var(--muted);
+}
+
+/* 折叠容器：grid-rows 0fr→1fr 过渡，收起/展开都是平滑动画（内容常驻 DOM） */
+/* 折叠内容：用真实内容高度驱动 max-height（JS 测量，原生过渡可靠）；
+   收起时整个卡片随之平滑变小 */
+.fold-inner {
+  overflow: hidden;
+  transition: max-height 0.26s ease;
+}
+
+/* 解析结果标题行的折叠按钮 */
+.fold-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  flex: none;
+  padding: 0;
+  background: none;
+  border: none;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.fold-caret {
+  width: 14px;
+  height: 14px;
+  opacity: 0.7;
+  transition: transform 0.18s ease;
+}
+
+.fold-caret.open {
+  transform: rotate(180deg);
+}
+
 .sources-label {
   font-weight: 600;
   color: var(--text);
@@ -1518,10 +1794,19 @@ input:focus {
 
 /* 输入页里的"已解析来源"入口 */
 .parsed-bar {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
   margin-top: 0;
+}
+
+/* 两列布局下长标题截断（整条 chip 点击进选择页，完整标题在 title 悬浮提示里） */
+.chip-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .parsed-chip {
@@ -1639,8 +1924,9 @@ input:focus {
   min-height: 100%;
 }
 
-/* 解析链接卡：高度按内容，**不参与拉伸**，多余高度全给结果卡。 */
-.parse-page:not(.fill-height) > .card {
+/* 解析链接卡：高度按内容，**不参与拉伸**，多余高度全给结果卡。
+   操作说明卡（.guide-card）是折叠条，豁免这套等高布局（否则 min-height 撑住收不干净）。 */
+.parse-page:not(.fill-height) > .card:not(.guide-card) {
   display: flex;
   flex: 0 1 auto;
   flex-direction: column;
@@ -1657,6 +1943,12 @@ input:focus {
 .parse-page:not(.fill-height) > .results {
   flex: 1 1 0;
   min-height: 260px;
+}
+
+/* 结果卡折叠时：退出等高分配，高度交给内容（只剩标题条） */
+.parse-page:not(.fill-height) > .results.collapsed {
+  flex: 0 0 auto;
+  min-height: 0;
 }
 
 .parse-page:not(.fill-height) > .results .skipped-box {
@@ -2025,6 +2317,29 @@ input:focus {
   margin-top: 16px;
 }
 
+/* 收起时紧凑成一条（仍全宽，只留标题行） */
+.results.collapsed {
+  padding: 6px 22px;
+}
+
+.results.collapsed .results-head {
+  margin-bottom: 0;
+}
+
+/* 展开内容两侧内缩（标题条全宽、内容比它窄一档，形成层次） */
+.results .fold-inner {
+  padding: 2px 18px 2px;
+}
+
+.results-sub {
+  font-size: 12px;
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
 .results-head {
   display: flex;
   align-items: center;
@@ -2047,9 +2362,17 @@ h2 {
   list-style: none;
   margin: 0;
   padding: 0;
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
+}
+
+/* 窗口窄时回退单列（应用窗口默认宽，双列是主布局） */
+@media (max-width: 760px) {
+  .parsed-bar,
+  .list {
+    grid-template-columns: 1fr;
+  }
 }
 
 .item {
